@@ -1,0 +1,11 @@
+random_seed	n_estimator	max_features	max_depth	criterion	Accuracy
+0	21	sqrt	2	entropy	0.79375
+1	25	sqrt	4	entropy	0.775
+2	7	sqrt	3	gini	0.75
+3	11	sqrt	3	entropy	0.79375
+4	27	sqrt	2	gini	0.78125
+5	6	sqrt	3	gini	0.78125
+6	10	sqrt	4	entropy	0.76875
+7	30	sqrt	2	entropy	0.78125
+8	30	sqrt	2	gini	0.7875
+9	15	sqrt	3	entropy	0.78125
