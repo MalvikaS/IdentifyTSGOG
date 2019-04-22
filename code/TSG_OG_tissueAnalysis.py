@@ -14,14 +14,53 @@ import glob
 import pandas as pd
 import identifyTSGOG as ito
 
+
+def findLabel(row):
+    """
+    Find label for the given data based on max probaility. Labels are assigned
+    based on max probability.
+    """
+    if row["Max score"] == row["TSG"]:
+        label = "TSG"
+    elif row["Max score"] == row["OG"]:
+        label = "OG"
+    return label
+
+
+def findCumLabel(row, cv=5):
+    """
+    Find label for the given data based on multiple cv models. Labels are
+    assigned based on mode.
+    """
+    labels = [row["Label_{}".format(x)] for x in range(cv) if
+              row["top_stat_{}".format(x)] == 1]
+    countTSG = labels.count("TSG")
+    countOG = labels.count("OG")
+    if countTSG > countOG:
+        return "TSG"
+    elif countOG > countTSG:
+        return "OG"
+    else:
+        return "Unlabelled"
+
+
+def findTop(row, treshold):
+    """
+    """
+    if row["Max score"] >= treshold:
+        return 1
+    else:
+        return 0
+
+
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentificationOfTSG-OG"
+PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
 DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
 os.chdir(PATH)
 #PATH = "/home/symec-02-01/Documents/IdentificationOfTSG-OG"
 #DATAPATH = "/home/symec-02-01/Documents/data/IdentificationOfTSG-OG"
 #os.chdir(PATH)
-folderPath = "/TSG_OG_classifier/tissues"
+folderPath = "/tissues"
 os.chdir(DATAPATH + "/FeatureMat/keepv2")
 fname = "filteredData.pkl"
 with open(fname, 'rb') as f:
@@ -42,10 +81,11 @@ for tissue in set(data["Primary site"]):
             pickle.dump(features_cd, f)
 
 Kfolds = 5
+percentile = 5
 sc = [None] * Kfolds
 rfc = [None] * Kfolds
 for fold in range(Kfolds):
-    os.chdir(PATH + "/TSG_OG_classifier/RandomForest/CV/{}".format(fold))
+    os.chdir(PATH + "/RandomForest/CV/{}".format(fold))
     # Load scaler fit
     fname = "cosmicStdScale.pkl"
     with open(fname, 'rb') as f:
@@ -58,6 +98,7 @@ for fold in range(Kfolds):
 os.chdir(DATAPATH + "/FeatureMat/keepv2/tissues")
 tiss_files = glob.glob('*.pkl')
 for file in tiss_files:
+    prob_df = pd.DataFrame()
     os.chdir(DATAPATH + "/FeatureMat/keepv2/tissues")
     with open(file, 'rb') as f:
         features_cd = pickle.load(f)
@@ -71,12 +112,7 @@ for file in tiss_files:
                                columns=tsg_og_feat.iloc[:, 0:-1].columns)
 
         # Prediction of novel driver genes
-        novel_pred = rfc[fold].predict(all_std)
         novel_prob = pd.DataFrame(rfc[fold].predict_proba(all_std),
-                                  index=all_std.index,
-                                  columns=rfc[fold].classes_).sort_values(
-                                          by=["TSG"], ascending=False)
-        novel_logp = pd.DataFrame(rfc[fold].predict_log_proba(all_std),
                                   index=all_std.index,
                                   columns=rfc[fold].classes_).sort_values(
                                           by=["TSG"], ascending=False)
@@ -86,3 +122,18 @@ for file in tiss_files:
         os.chdir("{}{}/{}".format(PATH, folderPath, file[5:-4]))
         filename = "prob_{}{}.txt".format(file[5:-4], fold)
         novel_prob.to_csv(filename, sep="\t", header=True, index=True)
+        # Find labels based on scores
+        novel_prob["Max score"] = (novel_prob.apply(max, axis=1))
+        novel_prob["Label"] = (novel_prob.apply(findLabel, axis=1))
+        rank = int(len(novel_prob) * percentile / 100)
+        treshold = sorted(novel_prob["Max score"], reverse=True)[rank]
+        novel_prob["top_stat"] = (novel_prob.apply(findTop, axis=1,
+                                                   treshold=treshold))
+        novel_prob = novel_prob.drop(["OG", "TSG"], axis=1)
+        prob_df = prob_df.join(novel_prob.add_suffix("_{}".format(fold)),
+                               how="outer")
+
+    prob_df["Label"] = prob_df.apply(findCumLabel, axis=1)
+    os.chdir("{}{}/{}".format(PATH, folderPath, file[5:-4]))
+    fname = "CVpredictions.txt"
+    prob_df.to_csv(fname, sep="\t", index_label="Gene name")
