@@ -114,7 +114,7 @@ for source in ["MutSigCV", "Our predictions"]:
                                    data_plot[data_plot["Source"] ==
                                              "Training"]['u'])
     print("Kolmogorov statistic for {} = {:0.3f}".format(source, KS_stat))
-    print("Kolmogorov statistic for {} = {:0.3f}".format(source, pval))
+    print("P-value for {} = {:0.3f}".format(source, pval))
 
 # Compare MutSigCV to Training set but vary threshold for q-value
 for thres in [0.010, 0.001, 0.0001, 0.00001]:
@@ -126,7 +126,8 @@ for thres in [0.010, 0.001, 0.0001, 0.00001]:
                                    data_plot[data_plot["Source"] ==
                                              "Training"]['u'])
     print("Number of genes = {}".format(len(fil_mutsig)))
-    print("Kolmogorov statistic for q-value threshold {} = {:0.3f}".format(thres, KS_stat))
+    print("Kolmogorov statistic for q-value threshold {} = {:0.3f}".format(
+            thres, KS_stat))
     print("p-value for q-value threshold {} = {:0.3f}".format(thres, pval))
     # Plot
     # For histogram uncomment next 3 lines
@@ -165,47 +166,103 @@ for thres in [0.010, 0.001, 0.0001, 0.00001]:
 
 
 # -------------------- Plot of fractions ------------------------ #
-consensus_list = [5, 4, 3]
+# Plots the fraction of genes predicted upon the total genes predicted
+# X-axis: Varying threshold of mutation rates
+# Y-axis: Fraction of genes predicted
+# MutSigCV:
+#  For c_cutoff == 5,4,3 -> all 602 genes predicted considered (p<=0.005,
+#  q<=0.01)
+#  For c_cutoff == 126, 60, 161, 429 -> genes predicted were ranked and top
+#  c_cutoff value number of genes considered
+# Our predictions:
+#  For c_cutoff == 5,126, 60 -> genes with consensus >= 5 considered
+#  For c_cutoff == 4, 161 -> genes with consensus >= 4 considered
+#  For c_cutoff == 3, 429 -> genes with consensus >= 3 considered
+# Training:
+#  All 208 genes were considered
+
+# Consensus list defined the way the data is filtered and ploted
+consensus_list = [5, 4, 3, 126, 60, 161, 429]
 for c_cutoff in consensus_list:
-    data_plot = data_all
-    data_plot = data_plot[(data_plot["Source"] == "Training") |
-                          (data_plot["Consensus"] >= c_cutoff)]
+    if c_cutoff in [126, 60, 161, 429]:
+        # MutSigCV predictions ranked and filtered
+        cols = ["Gene", "u", "Consensus", "Label", "Source"]
+        data_plot = data_mutsig.sort_values(by=["q", "p"]).iloc[:c_cutoff, :]
+        data_plot = data_plot[cols]
+        # Consensus defines how our model predictions are filtered
+        if c_cutoff == 126 or c_cutoff == 60:
+            consensus = 5
+        elif c_cutoff == 161:
+            consensus = 4
+        elif c_cutoff == 429:
+            consensus = 3
+        # Data concatenated
+        data_plot = pd.concat([data_plot,
+                               data_all[((data_all["Source"] == "Training") |
+                                        (data_all["Consensus"] >= consensus)) &
+                                        (data_all["Source"] != "MutSigCV")]])
+    else:
+        # Data filtered to retain what is considered for plotting
+        data_plot = data_all
+        data_plot = data_plot[(data_plot["Source"] == "Training") |
+                              (data_plot["Consensus"] >= c_cutoff)]
+
+    # Compare training dirstribution to MutSigCv and our prediciton
+    # distributions
+    for source in ["MutSigCV", "Our predictions"]:
+        KS_stat, pval = stats.ks_2samp(data_plot[data_plot["Source"] ==
+                                                 source]["u"],
+                                       data_plot[data_plot["Source"] ==
+                                                 "Training"]['u'])
+        print("Kolmogorov statistic for {} ({} genes)= {:0.3f}".format(source,
+              len(data_plot[data_plot["Source"] == source]["u"]), KS_stat))
+        print("P-value for {} ({} genes)= {:0.3f}".format(source,
+              len(data_plot[data_plot["Source"] == source]["u"]), pval))
+
+    # Define variables to bin data
     tot_size = len(data_plot)
     num_bins = 10
     size = int(round(tot_size / num_bins, 0))
+    # Calculate threshold for bins by sorting mutation rate and find
+    # equidistant u values
     thres_list = [round(u, 2) for idx, u in enumerate(sorted(data_plot["u"]))
-                  if (idx+1)%size == 0]
+                  if (idx + 1) % size == 0]
+    # Last bin threshold is max mutation rate
     if len(thres_list) < num_bins:
         thres_list.append(round(max(data_plot["u"]), 2))
     else:
         thres_list[num_bins-1] = round(max(data_plot["u"]), 2)
-    print(c_cutoff, tot_size, size, len(thres_list))
+#    print(c_cutoff, tot_size, size, len(thres_list))
+    # Initialise variable and populate table of fractions to be plotted
     cols = list(sorted(set(data_plot["Source"])))
     data_frac = pd.DataFrame(index=thres_list,
                              columns=cols)
     for thres in thres_list:
+        # Fractions calculated for all 3 (MutSigCv, Training, Our model)
         for source in cols:
             tot = len(data_plot[(data_plot["Source"] == source)]["u"])
             fraction = len(data_plot[(data_plot["Source"] == source) &
                                      (data_plot["u"] <= thres)]["u"]) / tot
             data_frac.loc[thres, source] = fraction
     # plot
-    fig = pyplot.figure(figsize=(11,8))
+    fig = pyplot.figure(figsize=(11, 8))
     ax1 = fig.add_subplot(111)
     ax1.plot(range(num_bins), data_frac["Training"], label='Training',
-             color='c', marker='o')
+             color='c', marker='x')
     ax1.plot(range(num_bins), data_frac["MutSigCV"], label='MutSigCV',
              color='b', marker='o')
     ax1.plot(range(num_bins), data_frac["Our predictions"],
-             label='Our predictions', color='r', marker='o')
-
+             label='Our model', color='r', marker='s')
     pyplot.xticks(range(num_bins), tuple(thres_list))
-    pyplot.xlabel('Threshold')
+    pyplot.xlabel('Mutation rate')
+    pyplot.ylabel('Fraction of genes predicted below mutation rate threshold')
     handles, labels = ax1.get_legend_handles_labels()
-    lgd = ax1.legend(handles, labels, loc='upper center', bbox_to_anchor=(1.15,1))
+    lgd = ax1.legend(handles, labels, loc='upper left',
+                     bbox_to_anchor=(0.01, 1))
     ax1.grid('on')
     os.chdir(PATH + "/mutsigCV/all_set")
     pyplot.savefig('fraction_plot_cv{}.png'.format(c_cutoff))
+    pyplot.close()
 
 # Plot Boxplot
 # read TSG and OG gene lists
