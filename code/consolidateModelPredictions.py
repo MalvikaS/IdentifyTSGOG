@@ -40,6 +40,33 @@ def findCumLabel(row, cv=5):
         return "Unlabelled"
 
 
+def findCumProb(row, cv=5):
+    """
+    Find cumulative probability for the given data based on multiple cv
+    models. p = 1 - ()
+    """
+    notLab_p = []
+    allLab = [row["Label_{}".format(x)] for x in range(cv)]
+    allProb = [row["Max score_{}".format(x)] for x in range(cv)]
+    countTSG = allLab.count("TSG")
+    countOG = allLab.count("OG")
+    if countTSG > countOG:
+        Label = "TSG"
+    elif countOG > countTSG:
+        Label = "OG"
+    for lab, prob in zip(allLab, allProb):
+        if lab == Label:
+            notLab_p.append(1 - float(prob))
+        else:
+            notLab_p.append(float(prob))
+#    if row["Label"] == "TSG":
+#        
+#    elif row["Label"] == "OG":
+#        
+#    notLab_p = [1 - float(row["Max score_{}".format(x)]) for x in range(cv)]
+    return 1 - np.prod(notLab_p)
+
+
 def findTop(row, treshold):
     """
     """
@@ -50,12 +77,12 @@ def findTop(row, treshold):
 
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentificationOfTSG-OG"
+PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
 DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
 os.chdir(PATH)
 
 # Folder to save results
-folderPath = "/TSG_OG_classifier/RandomForest/CV"
+folderPath = "/RandomForest/CV"
 os.makedirs(PATH + folderPath, exist_ok=True)
 
 # initalise variables
@@ -76,6 +103,7 @@ for folder in range(cv):
     prob_df = prob_df.join(temp.add_suffix("_{}".format(folder)), how="outer")
 
 prob_df["Label"] = prob_df.apply(findCumLabel, axis=1)
+prob_df["Probability"] = prob_df.apply(findCumProb, axis=1)
 os.chdir("{}{}".format(PATH, folderPath))
-fname = "CVpredictions.txt"
+fname = "CVpredictions_.txt"
 prob_df.to_csv(fname, sep="\t", index_label="Gene name")

@@ -206,6 +206,7 @@ for c_cutoff in consensus_list:
         data_plot = data_all
         data_plot = data_plot[(data_plot["Source"] == "Training") |
                               (data_plot["Consensus"] >= c_cutoff)]
+    data_plot["log_u"] = round(np.log(data_plot["u"]), 2)
 
     # Compare training dirstribution to MutSigCv and our prediciton
     # distributions
@@ -225,13 +226,13 @@ for c_cutoff in consensus_list:
     size = int(round(tot_size / num_bins, 0))
     # Calculate threshold for bins by sorting mutation rate and find
     # equidistant u values
-    thres_list = [round(u, 2) for idx, u in enumerate(sorted(data_plot["u"]))
+    thres_list = [round(u, 2) for idx, u in enumerate(sorted(data_plot["log_u"]))
                   if (idx + 1) % size == 0]
     # Last bin threshold is max mutation rate
     if len(thres_list) < num_bins:
-        thres_list.append(round(max(data_plot["u"]), 2))
+        thres_list.append(round(max(data_plot["log_u"]), 2))
     else:
-        thres_list[num_bins-1] = round(max(data_plot["u"]), 2)
+        thres_list[num_bins-1] = round(max(data_plot["log_u"]), 2)
 #    print(c_cutoff, tot_size, size, len(thres_list))
     # Initialise variable and populate table of fractions to be plotted
     cols = list(sorted(set(data_plot["Source"])))
@@ -240,20 +241,26 @@ for c_cutoff in consensus_list:
     for thres in thres_list:
         # Fractions calculated for all 3 (MutSigCv, Training, Our model)
         for source in cols:
-            tot = len(data_plot[(data_plot["Source"] == source)]["u"])
+            tot = len(data_plot[(data_plot["Source"] == source)]["log_u"])
             fraction = len(data_plot[(data_plot["Source"] == source) &
-                                     (data_plot["u"] <= thres)]["u"]) / tot
+                                     (data_plot["log_u"] <= thres)]["log_u"]) / tot
             data_frac.loc[thres, source] = fraction
     # plot
     fig = pyplot.figure(figsize=(11, 8))
     ax1 = fig.add_subplot(111)
-    ax1.plot(range(num_bins), data_frac["Training"], label='Training',
+#    ax1.plot(range(num_bins), data_frac["Training"], label='Training',
+#             color='c', marker='x')
+#    ax1.plot(range(num_bins), data_frac["MutSigCV"], label='MutSigCV',
+#             color='b', marker='o')
+#    ax1.plot(range(num_bins), data_frac["Our predictions"],
+#             label='Our model', color='r', marker='s')
+    ax1.plot(thres_list, data_frac["Training"], label='Training',
              color='c', marker='x')
-    ax1.plot(range(num_bins), data_frac["MutSigCV"], label='MutSigCV',
+    ax1.plot(thres_list, data_frac["MutSigCV"], label='MutSigCV',
              color='b', marker='o')
-    ax1.plot(range(num_bins), data_frac["Our predictions"],
+    ax1.plot(thres_list, data_frac["Our predictions"],
              label='Our model', color='r', marker='s')
-    pyplot.xticks(range(num_bins), tuple(thres_list))
+#    pyplot.xticks(range(num_bins), tuple(thres_list))
     pyplot.xlabel('Mutation rate')
     pyplot.ylabel('Fraction of genes predicted below mutation rate threshold')
     handles, labels = ax1.get_legend_handles_labels()
@@ -261,7 +268,7 @@ for c_cutoff in consensus_list:
                      bbox_to_anchor=(0.01, 1))
     ax1.grid('on')
     os.chdir(PATH + "/mutsigCV/all_set")
-    pyplot.savefig('fraction_plot_cv{}.png'.format(c_cutoff))
+    pyplot.savefig('log_fraction_plot_cv{}.png'.format(c_cutoff))
     pyplot.close()
 
 # Plot Boxplot
