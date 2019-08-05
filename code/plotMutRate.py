@@ -271,6 +271,9 @@ for c_cutoff in consensus_list:
     pyplot.savefig('log_fraction_plot_cv{}.png'.format(c_cutoff))
     pyplot.close()
 
+    # Data 
+    
+
 # Plot Boxplot
 # read TSG and OG gene lists
 os.chdir("/home/malvika/Documents/code/IdentificationOfTSG-OG/data")
