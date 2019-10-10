@@ -19,7 +19,7 @@ os.chdir(PATH)
 # MutSigCV predictions load
 os.chdir(PATH + "/mutsigCV/all_set")
 fname = "all_output.sig_genes.xlsx"
-data_mutsig = pd.read_excel(fname, sheetname="all_output.sig_genes")
+data_mutsig = pd.read_excel(fname, sheet_name="all_output.sig_genes")
 # rename columns
 data_mutsig.rename(columns={"gene": "Gene", 'u x 10^6': "u"}, inplace=True)
 # add columns
@@ -30,7 +30,7 @@ data_mutsig["Source"] = ["MutSigCV"] * len(data_mutsig)
 # Our predictions load
 os.chdir(PATH + "/RandomForest/CV")
 fname = "CVpredictions.xlsx"
-data_novel = pd.read_excel(fname, sheetname="CVpredictions")
+data_novel = pd.read_excel(fname, sheet_name="CVpredictions")
 # rename columns
 data_novel.rename(columns={"Gene name": "Gene"}, inplace=True)
 # add columns
@@ -38,7 +38,7 @@ data_novel["Source"] = ["Our predictions"] * len(data_novel)
 
 # Training data
 fname = "Training_predictions.xlsx"
-data_train = pd.read_excel(fname, sheetname="ConsolidatedCV_results")
+data_train = pd.read_excel(fname, sheet_name="ConsolidatedCV_results")
 # rename columns
 data_train.rename(columns={"Gene name": "Gene"}, inplace=True)
 # add columns
@@ -115,6 +115,56 @@ for source in ["MutSigCV", "Our predictions"]:
                                              "Training"]['u'])
     print("Kolmogorov statistic for {} = {:0.3f}".format(source, KS_stat))
     print("P-value for {} = {:0.3f}".format(source, pval))
+
+
+# ------------- Plot fraction of genes for varying mutation rates ------#
+num_genes = 60
+# Consensus defines how our model predictions are filtered
+consensus = 5
+# MutSigCV predictions ranked and filtered
+cols = ["Gene", "u", "Consensus", "Label", "Source"]
+data_plot = data_mutsig.sort_values(by=["q", "p"]).iloc[:num_genes, :]
+data_plot = data_plot[cols]
+# Data concatenated
+data_plot = pd.concat([data_plot,
+                       data_all[((data_all["Source"] == "Training") |
+                                (data_all["Consensus"] >= consensus)) &
+                                (data_all["Source"] != "MutSigCV")]])
+data_plot["log_u"] = round(np.log(data_plot["u"]), 2)
+# Populate fractions to be plotted
+temp = []
+for source, u in zip(data_plot["Source"], data_plot["log_u"]):
+    tot = len(data_plot[(data_plot["Source"] == source)]["log_u"])
+    fraction = len(data_plot[(data_plot["Source"] == source) &
+                             (data_plot["log_u"] <= u)]["log_u"]) / tot
+    temp.append(fraction)
+data_plot["Fraction"] = temp
+
+# plot
+fig = pyplot.figure(figsize=(11, 8))
+ax1 = fig.add_subplot(111)
+for source, c, m in zip(list(set(data_plot["Source"])), ['c', 'b', 'r'],
+                        ['x', 'o', 's']):
+    temp = data_plot[data_plot["Source"] == source]
+    ax1.scatter(temp["log_u"], temp["Fraction"], label=source,
+         color=c, marker=m)
+#    ax1.plot(thres_list, data_frac["MutSigCV"], label='MutSigCV',
+#             color='b', marker='o')
+#    ax1.plot(thres_list, data_frac["Our predictions"],
+#             label='Our model', color='r', marker='s')
+#    pyplot.xticks(range(num_bins), tuple(thres_list))
+pyplot.xlabel('Log mutation rate')
+pyplot.ylabel('Fraction of genes predicted below mutation rate')
+handles, labels = ax1.get_legend_handles_labels()
+lgd = ax1.legend(handles, labels, loc='upper left',
+                 bbox_to_anchor=(0.01, 1))
+ax1.grid('on')
+pyplot.show()
+os.chdir(PATH + "/mutsigCV/all_set")
+pyplot.savefig('{}.png'.format(c_cutoff))
+pyplot.close()
+
+
 
 # Compare MutSigCV to Training set but vary threshold for q-value
 for thres in [0.010, 0.001, 0.0001, 0.00001]:
