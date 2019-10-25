@@ -29,6 +29,15 @@ data_mutsig["Source"] = ["MutSigCV"] * len(data_mutsig)
 
 # Our predictions load
 os.chdir(PATH + "/RandomForest/CV")
+fname = "CVpredictions_oldfeat.xlsx"
+data_old = pd.read_excel(fname, sheet_name="CVpredictions_oldfeat")
+# rename columns
+data_old.rename(columns={"Gene name": "Gene"}, inplace=True)
+# add columns
+data_old["Source"] = ["Our predictions"] * len(data_old)
+
+# Old feature predictions load
+os.chdir(PATH + "/RandomForest/CV")
 fname = "CVpredictions.xlsx"
 data_novel = pd.read_excel(fname, sheet_name="CVpredictions")
 # rename columns
@@ -92,8 +101,8 @@ pyplot.hist(data_plot[data_plot["Source"] == "Our predictions"]['u'],
 pyplot.hist(data_plot[data_plot["Source"] == "Training"]['u'],
             bins, alpha=0.5, label="Training")
 pyplot.legend(loc='upper right')
-pyplot.xlabel("Mutation rate (1e-6)")
-pyplot.ylabel("Frequency")
+pyplot.xlabel("Mutation rate (1e-6)", fontsize =14)
+pyplot.ylabel("Frequency", fontsize =14)
 pyplot.title("Histogram of mutation rates of genes predicted")
 os.chdir(PATH + "/mutsigCV/all_set")
 pyplot.savefig("mut_rate_hist_.jpg")
@@ -148,20 +157,17 @@ for source, c, m in zip(list(set(data_plot["Source"])), ['c', 'b', 'r'],
     temp = data_plot[data_plot["Source"] == source]
     ax1.scatter(temp["log_u"], temp["Fraction"], label=source,
          color=c, marker=m)
-#    ax1.plot(thres_list, data_frac["MutSigCV"], label='MutSigCV',
-#             color='b', marker='o')
-#    ax1.plot(thres_list, data_frac["Our predictions"],
-#             label='Our model', color='r', marker='s')
-#    pyplot.xticks(range(num_bins), tuple(thres_list))
-pyplot.xlabel('Log mutation rate')
-pyplot.ylabel('Fraction of genes predicted below mutation rate')
+pyplot.xlabel('Log mutation rate', fontname='Calibri', fontsize =16)
+pyplot.ylabel('Fraction of genes predicted below mutation rate',
+              fontname='Calibri', fontsize =16)
 handles, labels = ax1.get_legend_handles_labels()
+pyplot.xticks(fontsize=12)
+pyplot.xticks(fontsize=12)
 lgd = ax1.legend(handles, labels, loc='upper left',
-                 bbox_to_anchor=(0.01, 1))
+                 bbox_to_anchor=(0.01, 1), fontsize =16)
 ax1.grid('on')
-pyplot.show()
 os.chdir(PATH + "/mutsigCV/all_set")
-pyplot.savefig('{}.png'.format(c_cutoff))
+pyplot.savefig('log_fraction_scatter_cv60.png')
 pyplot.close()
 
 
