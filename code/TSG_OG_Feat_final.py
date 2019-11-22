@@ -19,16 +19,20 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score
 from sklearn.metrics import recall_score
 import numpy as np
+from sklearn.metrics import precision_recall_curve
+import matplotlib.pyplot as plt
+from inspect import signature
+from sklearn.metrics import average_precision_score
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentificationOfTSG-OG"
+PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
 DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
 os.chdir(PATH)
 #PATH = "/home/symec-02-01/Documents/IdentificationOfTSG-OG"
 #DATAPATH = "/home/symec-02-01/Documents/data/IdentificationOfTSG-OG"
 #os.chdir(PATH)
 # Folder to save results
-folderPath = "/TSG_OG_classifier/RandomForest/CV"
+folderPath = "/RandomForest/CV_"
 os.makedirs(PATH + folderPath, exist_ok=True)
 
 # Random seed list to iterate over
@@ -39,7 +43,7 @@ N_EST = range(5, 31)
 K_Folds = 5
 
 # TODO: Load feature matrices
-os.chdir(PATH + "/TSG_OG_classifier/data/FeatureMat")
+os.chdir(PATH + "/data/FeatureMat")
 fname = "feat_keepv2_MM002.pkl"
 with open(fname, 'rb') as f:
     features_cd = pickle.load(f)
@@ -58,7 +62,6 @@ y_tsgog = y[TSGlist+OGlist].dropna(how='all')
 # Get data for unlabelled genes
 Unlab = X.drop(TSGlist+OGlist)
 Unlab = Unlab.dropna(how='all')
-
 
 # Stratified k-fold
 skf = StratifiedKFold(n_splits=K_Folds, random_state=3)
@@ -117,9 +120,9 @@ for idx, (train_index, test_index) in enumerate(skf.split(X_tsgog, y_tsgog)):
         Acc_var = pd.DataFrame(columns=Acc_var_cols)
         for rand_seed in RANDLIST:
             # Find best features for first random seed using grid search
-            rfc = RandomForestClassifier(random_state=rand_seed)
+            rfc = RandomForestClassifier(random_state=rand_seed, n_jobs=-1)
             gs = GridSearchCV(estimator=rfc, param_grid=param_rfc,
-                              scoring='accuracy', cv=5, verbose=1)
+                              scoring='accuracy', cv=5, verbose=1, n_jobs=-1)
             gs = gs.fit(X_train[collist], y_train)
             # predict labels for training set
             tr_pred = gs.predict(X_train[collist])
@@ -172,7 +175,7 @@ for idx, (train_index, test_index) in enumerate(skf.split(X_tsgog, y_tsgog)):
         # set filename for output file write into file
         filename = "Best_{}MM{}.txt".format(featUsed, "002")
         # Classification
-        rfc = RandomForestClassifier(random_state=3,
+        rfc = RandomForestClassifier(random_state=3, n_jobs=-1,
                                      n_estimators=best_nEst,
                                      max_features=maxf,
                                      max_depth=maxd,
@@ -188,11 +191,13 @@ for idx, (train_index, test_index) in enumerate(skf.split(X_tsgog, y_tsgog)):
         # predict labels for training set and test set
         y_pred = rfc.predict(X_test[collist])
         tr_pred = rfc.predict(X_train[collist])
+
         # Print to file gene labels and prediction
         gene_pred = pd.DataFrame(index=list(X_train.index) +
                                  list(X_test.index))
         gene_pred["Label"] = (list(y_train) + list(y_test))
         gene_pred["Predictions"] = (list(tr_pred) + list(y_pred))
+        gene_pred["Data"] = (["train"] * len(y_train)) + (["test"] * len(y_test))
         os.chdir("{}{}/{}".format(PATH, folderPath, idx))
         fname = "TrainingTest_predictions"
         gene_pred.to_csv(fname, sep="\t", index_label="Gene")
@@ -258,9 +263,6 @@ for idx, (train_index, test_index) in enumerate(skf.split(X_tsgog, y_tsgog)):
     os.chdir("{}{}/{}".format(PATH, folderPath, idx))
     filename = "allStats_MM{}.txt".format(fname[11:14])
     all_stats.to_csv(filename, sep="\t", header=True, index=False)
-
-
-
 
 
 
