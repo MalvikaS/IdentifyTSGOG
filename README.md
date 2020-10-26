@@ -14,6 +14,7 @@ cTaG is a tool used to identify tumour suppressor genes(TSGs) and oncogenes (OGs
 The model is built using mutation data from COSMIC (v79). The pre-processed data is used to generate features. Cancer Gene Census (CGC) is used to label genes as TSG or OG. The pan-cancer model is trained on these genes.
 
 ## Overview of cTaG
+![fig3methods](https://user-images.githubusercontent.com/17045221/97172918-bf3e9080-17b5-11eb-8706-13f96a4c4fa2.jpg)
 
 ## Folder structure
 The top-level directories contain code, data and output folders. 
