@@ -6,15 +6,21 @@ cTaG is a tool used to identify tumour suppressor genes(TSGs) and oncogenes (OGs
 
 - [Description](#description)
 - [Overview of cTaG](#overview-of-ctag)
+- [Data](#data)
 - [Folder structure](#folder-structure)
 - [Links](#links)
 
 ## Description
 
-The model is built using mutation data from COSMIC (v79). The pre-processed data is used to generate features. Cancer Gene Census (CGC) is used to label genes as TSG or OG. The pan-cancer model is trained on these genes.
+The model is built using somatic mutation data from COSMIC (v79) from differnt cancer types. We use ratio-metric and entropy features to classify genes as TSG or OG. Our model, unlike methods for identifying driver genes that use background mutation rate, is not biased towards genes with high frequency of mutations. The pan-cancer model is generated using random forest. Cancer Gene Census (CGC) is used to label genes as TSG or OG. The pan-cancer model is trained on these genes. We overcome overfitting due to the small set of genes to train by estimating stable hyper-parameter set using multiple random iterations. We also employ the pan-cancer model to identify tissue specific driver genes.
 
 ## Overview of cTaG
 ![fig3methods](https://user-images.githubusercontent.com/17045221/97172918-bf3e9080-17b5-11eb-8706-13f96a4c4fa2.jpg)
+
+## Data
+The data used for this analysis was downloaded from COSMIC (v9). Somatic coding mutation data from COSMIC was considered for samples less than 2000 mutations. The data was filtered. Mutation type annotations used were given by COSMIC. The genes were labelled as TSG or OG based on labels given by Cancer Gene Census (CGC), and the rest were marked Unlabelled. The list of TSGs and OGs used for training can be found [here](https://github.com/RamanLab/IdentifyTSGOG/tree/master/data/cgc_genes).The mutation data was used to generate feature matrix were the rows and columns correspond to genes/transcripts and 37 features respectively. The processed feature matrix can be found [here](https://github.com/RamanLab/IdentifyTSGOG/blob/master/data/FeatureMat/FeatureMat.tsv). The genes not identified as TSG or OG were used to make predictions of new driver genes.
+
+The mutation data from COSMIC was also used for tissue-specific analysis. The samples were divided based on their primary tissue for origin. Tissues with greater than 1000 samples were used. These tissues are breast, central_nervous_system, cervix, endometrium, haematopoietic_and_lymphoid_tissue, kidney, large_intestine, liver, pancreas and prostate. Feature matrix for each tissue was generated and can be found [here](https://github.com/RamanLab/IdentifyTSGOG/tree/master/data/FeatureMat/tissues).
 
 ## Folder structure
 The top-level directories contain code, data and output folders. 
@@ -26,7 +32,8 @@ The top-level directories contain code, data and output folders.
     ├── data
     │   ├── FeatureMa               # pre-processed data, feature matrix
     │   │   └── tissues             # Tissue-specific feature matrices
-    │   └── Functional_Analysis     # List of genes used for function analysis
+    │   │   Functional_Analysis     # List of genes used for function analysis
+    │   └── cgc_genes               # List of genes used for building model
     ├── output
     │   ├── evalRandIter            # Results for verying number of random iterations
     │   ├── FunctionalAnalysis      # Results for functional analysis
