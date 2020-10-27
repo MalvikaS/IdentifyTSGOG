@@ -15,6 +15,8 @@ cTaG is a tool used to identify tumour suppressor genes(TSGs) and oncogenes (OGs
 The model is built using somatic mutation data from COSMIC (v79) from differnt cancer types. We use ratio-metric and entropy features to classify genes as TSG or OG. Our model, unlike methods for identifying driver genes that use background mutation rate, is not biased towards genes with high frequency of mutations. The pan-cancer model is generated using random forest. Cancer Gene Census (CGC) is used to label genes as TSG or OG. The pan-cancer model is trained on these genes. We overcome overfitting due to the small set of genes to train by estimating stable hyper-parameter set using multiple random iterations. We also employ the pan-cancer model to identify tissue specific driver genes.
 
 ## Overview of cTaG
+Random forest is used to build multiple classifiers for each fold (Block A) and overfitting is avoided by identification of stable hyper-parameters (Block B). Consensus across models is used for predicting new TSGs and OGs. Somatic mutation data used to train models is downloaded from COSMIC. For details see section [Data](#data). 
+
 ![fig3methods](https://user-images.githubusercontent.com/17045221/97172918-bf3e9080-17b5-11eb-8706-13f96a4c4fa2.jpg)
 
 ## Data
