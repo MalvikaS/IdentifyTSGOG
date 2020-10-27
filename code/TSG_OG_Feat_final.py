@@ -19,20 +19,13 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score
 from sklearn.metrics import recall_score
 import numpy as np
-from sklearn.metrics import precision_recall_curve
-import matplotlib.pyplot as plt
-from inspect import signature
-from sklearn.metrics import average_precision_score
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
-DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
+PATH = "/set/absolute/path/to/IdentifyTSGOG"
 os.chdir(PATH)
-#PATH = "/home/symec-02-01/Documents/IdentificationOfTSG-OG"
-#DATAPATH = "/home/symec-02-01/Documents/data/IdentificationOfTSG-OG"
-#os.chdir(PATH)
+
 # Folder to save results
-folderPath = "/RandomForest/CV_"
+folderPath = "/output/RandomForest/CV"
 os.makedirs(PATH + folderPath, exist_ok=True)
 
 # Random seed list to iterate over
