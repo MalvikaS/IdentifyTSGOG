@@ -54,38 +54,19 @@ def findTop(row, treshold):
 
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
-DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
+PATH = "/set/absolute/path/to/IdentifyTSGOG"
 os.chdir(PATH)
-#PATH = "/home/symec-02-01/Documents/IdentificationOfTSG-OG"
-#DATAPATH = "/home/symec-02-01/Documents/data/IdentificationOfTSG-OG"
-#os.chdir(PATH)
-folderPath = "/tissues"
-os.chdir(DATAPATH + "/FeatureMat/keepv2")
-fname = "filteredData.pkl"
-with open(fname, 'rb') as f:
-    data = pickle.load(f)
 
-os.makedirs(DATAPATH + "/FeatureMat/keepv2/tissues", exist_ok=True)
-os.chdir(DATAPATH + "/FeatureMat/keepv2/tissues")
-samp_thresh = 1000
-for tissue in set(data["Primary site"]):
-    num_samp = len(set(data[data["Primary site"] == tissue]["ID_sample"]))
-    print("{} : {}".format(num_samp, tissue))
-    if num_samp >= samp_thresh:
-        data_tiss = data[data["Primary site"] == tissue]
-        features_cd = ito.getCdMutFeatures_v2(data_tiss, 2)
-        features_cd["Label"] = ["Unlabeled"] * len(features_cd)
-        featFName = "feat_{}.pkl".format(tissue)
-        with open(featFName, 'wb') as f:
-            pickle.dump(features_cd, f)
+# Folder to save results
+folderPath = "/output/TissueSpecificAnalyisis"
+os.makedirs(PATH + folderPath, exist_ok=True)
 
 Kfolds = 5
 percentile = 5
 sc = [None] * Kfolds
 rfc = [None] * Kfolds
 for fold in range(Kfolds):
-    os.chdir(PATH + "/RandomForest/CV/{}".format(fold))
+    os.chdir(PATH + "/output/RandomForest/CV/{}".format(fold))
     # Load scaler fit
     fname = "cosmicStdScale.pkl"
     with open(fname, 'rb') as f:
@@ -95,11 +76,11 @@ for fold in range(Kfolds):
     with open(fname, 'rb') as f:
         rfc[fold] = pickle.load(f)
 
-os.chdir(DATAPATH + "/FeatureMat/keepv2/tissues")
+os.chdir(PATH + "/data/FeatureMat/tissues")
 tiss_files = glob.glob('*.pkl')
 for file in tiss_files:
     prob_df = pd.DataFrame()
-    os.chdir(DATAPATH + "/FeatureMat/keepv2/tissues")
+    os.chdir(PATH + "/data/FeatureMat/tissues")
     with open(file, 'rb') as f:
         features_cd = pickle.load(f)
     # Drop rows where all entries are Nan
