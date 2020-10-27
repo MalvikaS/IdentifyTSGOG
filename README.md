@@ -48,7 +48,6 @@ The code folder containes all the files used for building the feature matrix, bu
     ├── ...
     ├── code                                # All the code for analysis
     │   ├── consolidateModelPredictions.py  # Consolidate results for pan-cancer analysis
-    │   ├── consolidateTissueAnalysis.py    # Consolidate results for tissue-specific analysis
     │   ├── create_feature_mat_keepv2.py    # Creates feature matrix from COSMIC data
     │   ├── evaluate_randiter.py            # Evaluates performance different number of random iterations
     │   ├── identifyTSGOG.py                # Module for building feature matrix
