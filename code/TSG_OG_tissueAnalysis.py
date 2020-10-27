@@ -55,6 +55,7 @@ def findTop(row, treshold):
 
 # TODO: Set path
 PATH = "/set/absolute/path/to/IdentifyTSGOG"
+#PATH = "D:/Projects/IdentifyTSGOG"
 os.chdir(PATH)
 
 # Folder to save results

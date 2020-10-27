@@ -47,14 +47,11 @@ def getBestParam(Acc_var):
     return [best_nEst, maxf, maxd, crit]
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentificationOfTSG-OG"
-DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
+PATH = "/set/absolute/path/to/IdentifyTSGOG"
 os.chdir(PATH)
-#PATH = "/home/symec-02-01/Documents/IdentificationOfTSG-OG"
-#DATAPATH = "/home/symec-02-01/Documents/data/IdentificationOfTSG-OG"
-#os.chdir(PATH)
+
 # Folder to save results
-folderPath = "/TSG_OG_classifier/evalRandIter"
+folderPath = "/output/evalRandIter"
 os.makedirs(PATH + folderPath, exist_ok=True)
 
 # Random seed list to iterate over
@@ -66,7 +63,7 @@ N_EST = range(5, 31)
 K_Folds = 5
 
 # TODO: Load feature matrices
-os.chdir(PATH + "/TSG_OG_classifier/data/FeatureMat")
+os.chdir(PATH + "/data/FeatureMat")
 fname = "feat_keepv2_MM002.pkl"
 with open(fname, 'rb') as f:
     features_cd = pickle.load(f)

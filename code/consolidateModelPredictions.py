@@ -77,12 +77,11 @@ def findTop(row, treshold):
 
 
 # TODO: Set path
-PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
-DATAPATH = "/home/malvika/Documents/code/data/IdentificationOfTSG-OG"
+PATH = "/set/absolute/path/to/IdentifyTSGOG"
 os.chdir(PATH)
 
 # Folder to save results
-folderPath = "/RandomForest/CV"
+folderPath = "/output/RandomForest/CV"
 os.makedirs(PATH + folderPath, exist_ok=True)
 
 # initalise variables
@@ -105,5 +104,5 @@ for folder in range(cv):
 prob_df["Label"] = prob_df.apply(findCumLabel, axis=1)
 prob_df["Probability"] = prob_df.apply(findCumProb, axis=1)
 os.chdir("{}{}".format(PATH, folderPath))
-fname = "CVpredictions_.txt"
+fname = "CVpredictions.txt"
 prob_df.to_csv(fname, sep="\t", index_label="Gene name")

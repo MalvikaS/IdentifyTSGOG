@@ -12,13 +12,12 @@ import os
 from matplotlib import pyplot
 from scipy import stats
 
-#PATH = "/home/malvika/Documents/code/IdentifyTSGOG"
-PATH = "C:/Users/malvi/OneDrive/Desktop/IdentifyTSGOG"
+PATH = "/set/absolute/path/to/IdentifyTSGOG"
 os.chdir(PATH)
 
 # ----------- Load data and add or rename required columns ----------- #
 # MutSigCV predictions load
-os.chdir(PATH + "/mutsigCV/all_set")
+os.chdir(PATH + "/output/MutSigCVComparisson/all_set")
 fname = "all_output.sig_genes.xlsx"
 data_mutsig = pd.read_excel(fname, sheet_name="all_output.sig_genes")
 # rename columns
@@ -29,7 +28,7 @@ data_mutsig["Label"] = ["Driver"] * len(data_mutsig)
 data_mutsig["Source"] = ["MutSigCV"] * len(data_mutsig)
 
 # Our feature predictions load
-os.chdir(PATH + "/RandomForest/CV")
+os.chdir(PATH + "/output/RandomForest/CV")
 fname = "CVpredictions.xlsx"
 data_novel = pd.read_excel(fname, sheet_name="CVpredictions")
 # rename columns
@@ -77,24 +76,6 @@ data_all = pd.concat([data_all, data_temp])
 
 data_plot = data_all
 
-# --------------- Kolmogorov-Smirnov statistic -------------- ##
-# Calculate statistic and pvalue between MutSigCV and (Our method + Training)
-KS_stat, pval = stats.ks_2samp(data_plot[data_plot["Source"] ==
-                                         "MutSigCV"]["u"],
-                               data_plot[data_plot["Source"] !=
-                                         "MutSigCV"]['u'])
-print("KS statistic = {:0.3f}\np-value = {:0.3f}".format(KS_stat, pval))
-
-# Compare training dirstribution to MutSigCv and our prediciton distributions
-for source in ["MutSigCV", "Our predictions"]:
-    KS_stat, pval = stats.ks_2samp(data_plot[data_plot["Source"] ==
-                                             source]["u"],
-                                   data_plot[data_plot["Source"] ==
-                                             "Training"]['u'])
-    print("Kolmogorov statistic for {} = {:0.3f}".format(source, KS_stat))
-    print("P-value for {} = {:0.3f}".format(source, pval))
-
-
 # ------------- Plot fraction of genes for varying mutation rates ------#
 num_genes = 60
 # Consensus defines how our model predictions are filtered
@@ -135,9 +116,25 @@ pyplot.xticks(fontsize=12)
 lgd = ax1.legend(handles, labels, loc='upper left',
                  bbox_to_anchor=(0.01, 1), fontsize =16)
 ax1.grid('on')
-os.chdir(PATH + "/mutsigCV/all_set")
+os.chdir(PATH + "/output/MutSigCVComparisson/all_set")
 pyplot.savefig('log_fraction_scatter_cv60.jpg')
 pyplot.close()
 
+# --------------- Kolmogorov-Smirnov statistic -------------- ##
+# Calculate statistic and pvalue between MutSigCV and (Our method + Training)
+KS_stat, pval = stats.ks_2samp(data_plot[data_plot["Source"] ==
+                                         "MutSigCV"]["u"],
+                               data_plot[data_plot["Source"] !=
+                                         "MutSigCV"]['u'])
+print("KS statistic = {:0.3f}\np-value = {:0.3f}".format(KS_stat, pval))
+
+# Compare training dirstribution to MutSigCv and our prediciton distributions
+for source in ["MutSigCV", "Our predictions"]:
+    KS_stat, pval = stats.ks_2samp(data_plot[data_plot["Source"] ==
+                                             source]["u"],
+                                   data_plot[data_plot["Source"] ==
+                                             "Training"]['u'])
+    print("Kolmogorov statistic for {} = {:0.3f}".format(source, KS_stat))
+    print("P-value for {} = {:0.3f}".format(source, pval))
 
 
