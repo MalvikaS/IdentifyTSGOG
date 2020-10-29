@@ -1,6 +1,6 @@
 cTaG
 ============================
-cTaG is a tool used to identify tumour suppressor genes (TSGs) and oncogenes (OGs) using somatic mutation data.
+cTaG (<ins>c</ins>lassify <ins>T</ins>SG <ins>a</ins>nd O<ins>G</ins>) is a tool used to identify tumour suppressor genes (TSGs) and oncogenes (OGs) using somatic mutation data.
 
 ## Table of Contents
 
